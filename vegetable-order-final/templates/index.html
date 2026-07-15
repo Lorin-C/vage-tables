@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>蔬菜单</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="box">
+<h2>陈老四蔬菜批发</h2>
+<form action="/generate" method="post">
+客户名称：<input name="customer"><br>
+日期：<input type="date" name="date"><br>
+菜品列表（一行一个）：<br>
+<textarea name="dishes" placeholder="白菜\n土豆\n西红柿"></textarea><br>
+<button>生成 Word 文档</button>
+</form>
+</div>
+</body>
+</html>
