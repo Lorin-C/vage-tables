@@ -28,6 +28,7 @@ def generate():
             if i + 1 < len(table.rows):
                 table.rows[i+1].cells[0].text = dish
 
+    os.makedirs("output", exist_ok=True)
     name = "蔬菜单_" + datetime.now().strftime("%Y%m%d%H%M%S") + ".docx"
     path = os.path.join("output", name)
     doc.save(path)
