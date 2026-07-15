@@ -23,14 +23,13 @@ def generate():
             p.text = f"客户：{customer}    {date}"
 
     if doc.tables:
-        table = doc.tables[0]
+        table = None
 for t in doc.tables:
     first_row = [c.text for c in t.rows[0].cells]
 
     if "菜品" in first_row:
         table = t
         break
-
 
 if table:
 
