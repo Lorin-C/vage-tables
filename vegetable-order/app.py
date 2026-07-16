@@ -2,12 +2,17 @@ from flask import Flask, render_template, request, send_file
 from docx import Document
 from docx.table import Table
 from docx.shared import Pt
+from docx.enum.text import WD_TAB_ALIGNMENT
+from docx.enum.style import WD_STYLE_TYPE
 from datetime import datetime
 import os
 
+
 app = Flask(__name__)
 
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 TEMPLATE = os.path.join(
     BASE_DIR,
@@ -16,7 +21,7 @@ TEMPLATE = os.path.join(
 )
 
 # =========================
-# 设置字体
+# 字体设置
 # =========================
 
 def set_font(run, size, bold=True):
@@ -51,8 +56,28 @@ def get_all_tables(doc):
     return tables
 
 # =========================
-# 首页
+# 替换段落文字
+# 保留原格式
 # =========================
+
+def replace_paragraph(paragraph, text, size):
+
+    for run in paragraph.runs:
+        run.text = ""
+
+
+    run = paragraph.add_run(text)
+
+
+    set_font(
+        run,
+        size,
+        True
+    )
+
+
+
+
 
 @app.route("/")
 def index():
@@ -61,29 +86,9 @@ def index():
         "index.html"
     )
 
-# =========================
-# 安全修改段落文字
-# 保留段落格式
-# =========================
-
-def replace_paragraph(paragraph, text, size):
-
-    for run in paragraph.runs:
-
-        run.text = ""
 
 
-    run = paragraph.add_run(text)
 
-    set_font(
-        run,
-        size,
-        True
-    )
-
-# =========================
-# 生成Word
-# =========================
 
 @app.route(
     "/generate",
@@ -92,27 +97,31 @@ def replace_paragraph(paragraph, text, size):
 def generate():
 
 
+    # 客户可为空
+
     customer = request.form.get(
         "customer",
         ""
     )
 
 
-    date = request.form.get(
-        "date",
-        ""
+    # 最多6个字
+
+    customer = customer[:6]
+
+
+
+    # 日期
+
+    date = datetime.now().strftime(
+        "%Y年%m月%d日"
     )
 
 
-    if not date:
 
-        date = datetime.now().strftime(
-            "%Y年%m月%d日"
-        )
+    # 获取菜品
 
-
-
-    dishes_text = request.form.get(
+    text = request.form.get(
         "dishes",
         ""
     )
@@ -122,7 +131,7 @@ def generate():
 
         x.strip()
 
-        for x in dishes_text.splitlines()
+        for x in text.splitlines()
 
         if x.strip()
 
@@ -139,74 +148,89 @@ def generate():
         doc
     )
 
-# =========================
-# 写客户和日期
-# 保留陈老四蔬菜批发
-# 客户日期同一行
-# =========================
+    # =========================
+    # 客户 + 日期
+    # 同一行
+    # 时间靠右
+    # 保留标题
+    # =========================
 
-if len(tables) > 0:
-
-    header_table = tables[0]
-
-    for row in header_table.rows:
-
-        for cell in row.cells:
-
-            for p in cell.paragraphs:
-
-                text = p.text.strip()
+    if len(tables) > 0:
 
 
-                if (
-                    "客户：" in text
-                    and
-                    "2026" in text
-                ):
+        header = tables[0]
 
 
-                    # 客户最多6个字
-
-                    customer = customer[:6]
+        for row in header.rows:
 
 
-                    # 清空原文字
-                    for run in p.runs:
-                        run.text = ""
+            for cell in row.cells:
 
 
-                    # 设置右对齐日期
-
-                    p.paragraph_format.tab_stops.add_tab_stop(
-                        Pt(300)
-                    )
+                for p in cell.paragraphs:
 
 
-                    run = p.add_run(
-                        "客户：" 
-                        +
-                        customer
-                        +
-                        "\t"
-                        +
-                        date
-                    )
+                    txt = p.text.strip()
 
 
-                    set_font(
-                        run,
-                        14,
-                        True
-                    )
+
+                    if (
+                        "客户：" in txt
+                        and
+                        "2026" in txt
+                    ):
 
 
-                    break
+
+                        # 清空当前行文字
+                        for run in p.runs:
+                            run.text = ""
+
+
+
+                        # 设置右侧制表位
+
+                        p.paragraph_format.tab_stops.add_tab_stop(
+                            Pt(300),
+                            WD_TAB_ALIGNMENT.RIGHT
+                        )
+
+
+
+                        run = p.add_run(
+
+                            "客户："
+
+                            +
+
+                            customer
+
+                            +
+
+                            "\t"
+
+                            +
+
+                            date
+
+                        )
+
+
+                        set_font(
+                            run,
+                            14,
+                            True
+                        )
+
+
+                        break
 
     # =========================
-    # 找菜品列
+    # 查找菜品列
     # =========================
 
     dish_cells = []
+
 
 
     for table in tables[1:]:
@@ -221,19 +245,20 @@ if len(tables) > 0:
             if len(cells) >= 5:
 
 
-                num = cells[0].text.strip()
+                number = cells[0].text.strip()
 
 
-                if num.isdigit():
+
+                if number.isdigit():
 
 
-                    n = int(num)
+                    n = int(number)
 
 
                     if 1 <= n <= 47:
 
 
-                        # 第二列是菜品
+                        # 第二列为菜品
 
                         dish_cells.append(
                             cells[1]
@@ -241,7 +266,7 @@ if len(tables) > 0:
 
     # =========================
     # 写入菜品
-    # 只修改文字
+    # 只改菜品
     # =========================
 
     for i, cell in enumerate(dish_cells):
@@ -254,8 +279,8 @@ if len(tables) > 0:
 
 
             for run in p.runs:
-
                 run.text = ""
+
 
 
             run = p.add_run(
@@ -304,12 +329,10 @@ if len(tables) > 0:
 
 
     output = os.path.join(
-
         output_dir,
-
         filename
-
     )
+
 
 
     doc.save(
@@ -319,11 +342,8 @@ if len(tables) > 0:
 
 
     return send_file(
-
         output,
-
         as_attachment=True
-
     )
 
 # =========================
@@ -342,9 +362,6 @@ if __name__ == "__main__":
 
 
     app.run(
-
         host="0.0.0.0",
-
         port=port
-
     )
