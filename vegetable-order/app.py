@@ -16,7 +16,7 @@ TEMPLATE = os.path.join(
 )
 
 # =========================
-# 字体设置
+# 设置字体
 # =========================
 
 def set_font(run, size, bold=True):
@@ -33,7 +33,7 @@ def set_font(run, size, bold=True):
     run.bold = bold
 
 # =========================
-# 获取所有表格
+# 获取全部表格
 # =========================
 
 def get_all_tables(doc):
@@ -51,28 +51,6 @@ def get_all_tables(doc):
     return tables
 
 # =========================
-# 安全替换单元格文字
-# 不破坏格式
-# =========================
-
-def replace_cell_text(cell, text, size):
-
-    paragraph = cell.paragraphs[0]
-
-    # 清除文字，不删除段落格式
-
-    for run in paragraph.runs:
-        run.text = ""
-
-    run = paragraph.add_run(text)
-
-    set_font(
-        run,
-        size,
-        True
-    )
-
-# =========================
 # 首页
 # =========================
 
@@ -81,6 +59,26 @@ def index():
 
     return render_template(
         "index.html"
+    )
+
+# =========================
+# 安全修改段落文字
+# 保留段落格式
+# =========================
+
+def replace_paragraph(paragraph, text, size):
+
+    for run in paragraph.runs:
+
+        run.text = ""
+
+
+    run = paragraph.add_run(text)
+
+    set_font(
+        run,
+        size,
+        True
     )
 
 # =========================
@@ -93,17 +91,18 @@ def index():
 )
 def generate():
 
-    # 客户允许为空
 
     customer = request.form.get(
         "customer",
         ""
     )
 
+
     date = request.form.get(
         "date",
         ""
     )
+
 
     if not date:
 
@@ -111,12 +110,13 @@ def generate():
             "%Y年%m月%d日"
         )
 
-    # 获取菜品
+
 
     dishes_text = request.form.get(
         "dishes",
         ""
     )
+
 
     dishes = [
 
@@ -128,76 +128,109 @@ def generate():
 
     ]
 
-    # 打开模板
+
 
     doc = Document(
         TEMPLATE
     )
+
 
     tables = get_all_tables(
         doc
     )
 
     # =========================
-    # 写客户和日期
-    # 不改变原单元格结构
+    # 修改客户和日期
+    #
+    # 保留：
+    # 陈老四蔬菜批发
+    #
+    # 只修改下一行
     # =========================
 
     if len(tables) > 0:
 
+
         header_table = tables[0]
+
 
         for row in header_table.rows:
 
+
             for cell in row.cells:
 
-                if (
-                    "客户" in cell.text
-                    or
-                    "2026年" in cell.text
-                ):
 
-                    replace_cell_text(
+                paragraphs = cell.paragraphs
 
-                        cell,
 
-                        "客户："
-                        +
-                        customer
-                        +
-                        "               "
-                        +
-                        date,
+                for p in paragraphs:
 
-                        14
-                    )
 
-                    break
+                    text = p.text.strip()
+
+
+
+                    # 找客户日期这一行
+
+                    if (
+                        "客户：" in text
+                        and
+                        "2026" in text
+                    ):
+
+
+                        replace_paragraph(
+
+                            p,
+
+                            "客户："
+                            +
+                            customer
+                            +
+                            "               "
+                            +
+                            date,
+
+                            14
+
+                        )
+
+
+
+                        break
 
     # =========================
     # 找菜品列
-    # 只修改第二列
     # =========================
 
     dish_cells = []
 
+
     for table in tables[1:]:
+
 
         for row in table.rows:
 
+
             cells = row.cells
+
 
             if len(cells) >= 5:
 
-             number = cells[0].text.strip()
 
-                if number.isdigit():
+                num = cells[0].text.strip()
 
-                    n = int(number)
+
+                if num.isdigit():
+
+
+                    n = int(num)
+
 
                     if 1 <= n <= 47:
 
-                        # 第二列=菜品
+
+                        # 第二列是菜品
 
                         dish_cells.append(
                             cells[1]
@@ -205,21 +238,32 @@ def generate():
 
     # =========================
     # 写入菜品
-    # 不碰其它列
+    # 只修改文字
     # =========================
 
     for i, cell in enumerate(dish_cells):
 
+
         if i < len(dishes):
 
-            replace_cell_text(
 
-                cell,
+            p = cell.paragraphs[0]
 
-                dishes[i],
 
-                18
+            for run in p.runs:
 
+                run.text = ""
+
+
+            run = p.add_run(
+                dishes[i]
+            )
+
+
+            set_font(
+                run,
+                18,
+                True
             )
 
     # =========================
@@ -231,10 +275,13 @@ def generate():
         "output"
     )
 
+
     os.makedirs(
         output_dir,
         exist_ok=True
     )
+
+
 
     filename = (
 
@@ -252,6 +299,7 @@ def generate():
 
     )
 
+
     output = os.path.join(
 
         output_dir,
@@ -260,9 +308,12 @@ def generate():
 
     )
 
+
     doc.save(
         output
     )
+
+
 
     return send_file(
 
@@ -278,14 +329,14 @@ def generate():
 
 if __name__ == "__main__":
 
-    port = int(
 
+    port = int(
         os.environ.get(
             "PORT",
             5000
         )
-
     )
+
 
     app.run(
 
