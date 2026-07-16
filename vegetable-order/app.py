@@ -56,8 +56,13 @@ def generate():
     for idx, item in enumerate(items):
         if idx < len(dish_cells):
             cell = dish_cells[idx]
-            cell.text = ""
-            run = cell.paragraphs[0].add_run(item["dish"])
+           p = cell.paragraphs[0]
+
+for r in p.runs:
+    r.text = ""
+
+run = p.add_run(item["dish"])
+set_font(run, 18, True)
             set_font(run, 18, True)
 
     # 写入客户名称和日期，四号加粗
