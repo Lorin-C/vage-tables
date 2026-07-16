@@ -55,30 +55,29 @@ def generate():
     # 写入菜品，只修改菜品列，小二加粗
     for idx, item in enumerate(items):
         if idx < len(dish_cells):
-            cell = dish_cells[idx]
-           p = cell.paragraphs[0]
+                cell = dish_cells[idx]
+               p = cell.paragraphs[0]
 
-for r in p.runs:
-    r.text = ""
+    for r in p.runs:
+        r.text = ""
 
-run = p.add_run(item["dish"])
-set_font(run, 18, True)
+    run = p.add_run(item["dish"])
             set_font(run, 18, True)
 
     # 写入客户名称和日期，四号加粗
     header_cell = doc.tables[0].cell(0,0)
-p = header_cell.paragraphs[0]
+    p = header_cell.paragraphs[0]
 
-for r in p.runs:
-    r.text = ""
+    for r in p.runs:
+        r.text = ""
 
-run = p.add_run(
-    "客户：" + customer +
-    "               " +
-    date
-)
+    run = p.add_run(
+        "客户：" + customer +
+        "               " +
+        date
+    )
 
-set_font(run, 14, True)
+    set_font(run, 14, True)
 
     p = header_cell.paragraphs[0]
     r = p.add_run("陈老四蔬菜批发")
