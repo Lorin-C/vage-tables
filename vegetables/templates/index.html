@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>陈老四蔬菜单</title>
+
+
+<link rel="stylesheet" href="/static/style.css">
+
+
+</head>
+
+
+<body>
+
+
+<div class="box">
+
+
+<h2>
+陈老四蔬菜批发
+</h2>
+
+
+
+<form action="/generate" method="post">
+
+
+
+<div class="form-group">
+
+
+<label>
+客户名称
+</label>
+
+
+<input
+
+type="text"
+
+id="customer"
+
+name="customer"
+
+maxlength="6"
+
+placeholder="请输入客户名称"
+
+/>
+
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+
+<label>
+日期
+</label>
+
+
+<input
+
+type="date"
+
+id="date"
+
+name="date"
+
+/>
+
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+
+<label>
+菜品列表
+</label>
+
+
+<textarea
+
+id="dishes"
+
+name="dishes"
+
+placeholder="请粘贴菜品名称，每行一个&#10;例如：&#10;白菜&#10;土豆&#10;西红柿"
+
+></textarea>
+
+
+</div>
+
+
+
+
+<button type="submit">
+
+生成订单并下载
+
+</button>
+
+
+
+
+</form>
+
+
+</div>
+
+
+
+
+<script>
+
+
+// 自动填写今天日期
+
+const today = new Date();
+
+
+const year = today.getFullYear();
+
+
+const month = String(
+today.getMonth()+1
+).padStart(2,'0');
+
+
+const day = String(
+today.getDate()
+).padStart(2,'0');
+
+
+
+document.getElementById("date").value =
+
+`${year}-${month}-${day}`;
+
+
+</script>
+
+
+
+</body>
+
+</html>
